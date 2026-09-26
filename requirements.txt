@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# KelasYar – core production dependencies
+# Python >= 3.10 required
+# ---------------------------------------------------------------------------
+
+# REST API framework (async, OpenAPI/Swagger out of the box)
+fastapi>=0.110,<1.0
+
+# ASGI server
+uvicorn[standard]>=0.29,<1.0
+
+# Validation & settings
+pydantic>=2.6,<3.0
+pydantic-settings>=2.2,<3.0
+
+# ORM + migrations
+SQLAlchemy>=2.0.25,<2.1
+alembic>=1.13,<2.0
+aiosqlite>=0.19,<1.0          # SQLite async driver (dev / small deployments)
+
+# Telegram bot framework (fully async, fits FastAPI's event loop)
+aiogram>=3.4,<4.0
+aiohttp-socks>=0.9,<1.0       # SOCKS5 proxy support (Hiddify / v2rayN)
+
+# Auth & security
+PyJWT>=2.8,<3.0
+
+# Multipart form parsing (file uploads)
+python-multipart>=0.0.9
+
+# Jalali (Shamsi) calendar support for Iranian users
+jdatetime>=5.0,<6.0
+
+# IANA timezone data (required on Windows, harmless elsewhere)
+tzdata>=2024.1
+
+# NOTE (PostgreSQL):
+#   For production with PostgreSQL additionally install:
+#     pip install "asyncpg>=0.29" "psycopg2-binary>=2.9"
+#   (asyncpg -> runtime, psycopg2-binary -> alembic migrations)

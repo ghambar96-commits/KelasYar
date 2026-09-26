@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل مدیریت کلاس‌یار</title>
+<style>
+  :root{
+    --bg:#0f1420; --card:#171e2e; --card2:#1d2740; --line:#2a3650;
+    --text:#e8ecf5; --muted:#8b97ad; --accent:#5b8cff; --accent2:#7c5bff;
+    --ok:#2ecc71; --danger:#ff5b6e; --warn:#ffb454;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:Vazirmatn,Tahoma,"Segoe UI",sans-serif}
+  body{background:var(--bg);color:var(--text);min-height:100vh}
+  .hidden{display:none!important}
+  /* ---------- login ---------- */
+  #login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
+  .login-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px;width:100%;max-width:380px;text-align:center}
+  .login-card h1{font-size:22px;margin-bottom:6px}
+  .login-card p{color:var(--muted);font-size:13px;margin-bottom:20px;line-height:2}
+  .login-card input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:16px;letter-spacing:2px;text-align:center;direction:ltr}
+  /* ---------- layout ---------- */
+  header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  header .logo{font-weight:800;font-size:17px}
+  header .who{color:var(--muted);font-size:12px}
+  header .spacer{flex:1}
+  nav{display:flex;gap:6px;padding:12px 20px;flex-wrap:wrap;background:var(--card);border-bottom:1px solid var(--line)}
+  nav button{border:1px solid var(--line);background:transparent;color:var(--muted);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px}
+  nav button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+  main{padding:20px;max-width:1100px;margin:0 auto}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{font-size:16px;margin-bottom:14px}
+  /* ---------- components ---------- */
+  button.btn{border:none;border-radius:9px;padding:8px 14px;cursor:pointer;font-size:12px;background:var(--accent);color:#fff}
+  button.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+  button.btn.danger{background:var(--danger)}
+  button.btn.ok{background:var(--ok)}
+  input,select,textarea{padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:13px}
+  textarea{width:100%;min-height:110px;direction:ltr;text-align:left;font-family:monospace}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{color:var(--muted);text-align:right;padding:8px;border-bottom:1px solid var(--line);font-weight:600}
+  td{padding:9px 8px;border-bottom:1px solid var(--line)}
+  tr:last-child td{border-bottom:none}
+  .tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;border:1px solid var(--line);color:var(--muted)}
+  .tag.admin{color:#ffb454;border-color:#ffb45455;background:#ffb45411}
+  .tag.contrib{color:#5b8cff;border-color:#5b8cff55;background:#5b8cff11}
+  .tag.user{color:var(--muted)}
+  .tag.banned{color:var(--danger);border-color:var(--danger)55;background:#ff5b6e11}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .stat .n{font-size:24px;font-weight:800}
+  .stat .l{color:var(--muted);font-size:12px;margin-top:4px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .muted{color:var(--muted);font-size:12px}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--line);padding:10px 22px;border-radius:10px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:99}
+  #toast.show{opacity:1}
+  .medal{font-size:16px}
+  pre{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px;overflow:auto;direction:ltr;text-align:left}
+  .field{margin-bottom:10px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<!-- ======================= LOGIN ======================= -->
+<div id="login">
+  <div class="login-card">
+    <div style="font-size:38px">📚</div>
+    <h1>پنل مدیریت کلاس‌یار</h1>
+    <p>در ربات تلگرام دستور <b>/api</b> را بزنید تا یک کد اتصال دریافت کنید؛<br>سپس آن را اینجا وارد کنید.</p>
+    <input id="code" placeholder="کد اتصال" maxlength="12" autocomplete="off">
+    <br><br>
+    <button class="btn" style="width:100%;padding:12px" onclick="login()">ورود</button>
+    <p id="login-err" style="color:var(--danger);margin-top:12px;min-height:18px;font-size:12px"></p>
+  </div>
+</div>
+
+<!-- ======================= APP ======================= -->
+<div id="app" class="hidden">
+  <header>
+    <span class="logo">📚 کلاس‌یار</span>
+    <span class="who" id="who"></span>
+    <span class="spacer"></span>
+    <button class="btn ghost" onclick="logout()">خروج</button>
+  </header>
+  <nav id="nav"></nav>
+  <main id="main"></main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ===================== tiny helpers ===================== */
+const $ = (s) => document.querySelector(s);
+const API = '/api';
+let TOKEN = localStorage.getItem('kelasyar_token') || '';
+
+function toast(msg, ok = true) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.style.borderColor = ok ? 'var(--ok)' : 'var(--danger)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: {
+      'Authorization': 'Bearer ' + TOKEN,
+      ...(opts.body && !(opts.body instanceof FormData) ? {'Content-Type': 'application/json'} : {}),
+      ...(opts.headers || {}),
+    },
+  });
+  if (res.status === 401) { logout(); throw new Error('نشست شما منقضی شده؛ دوباره وارد شوید.'); }
+  if (!res.ok) {
+    let detail = res.statusText;
+    try { const j = await res.json(); detail = j.detail || JSON.stringify(j); } catch (e) {}
+    throw new Error(detail);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fa = (n) => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+const faDate = (iso) => iso ? fa(String(iso).slice(0, 10)) : '—';
+
+/* ===================== auth ===================== */
+async function login() {
+  const code = $('#code').value.trim();
+  $('#login-err').textContent = '';
+  try {
+    const res = await fetch(API + '/auth/exchange', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({code}),
+    });
+    if (!res.ok) { const j = await res.json(); throw new Error(j.detail || 'کد نامعتبر است'); }
+    const data = await res.json();
+    TOKEN = data.access_token;
+    localStorage.setItem('kelasyar_token', TOKEN);
+    ME = data.user;
+    showApp();
+  } catch (e) { $('#login-err').textContent = e.message; }
+}
+
+function logout() {
+  TOKEN = ''; localStorage.removeItem('kelasyar_token');
+  $('#app').classList.add('hidden'); $('#login').classList.remove('hidden');
+}
+
+let ME = null;
+async function showApp() {
+  $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+  if (!ME) ME = await api('/users/me');
+  if (ME.role !== 'SUPER_ADMIN') { alert('این پنل فقط برای مدیر کل است. نقش شما: ' + ME.role); return logout(); }
+  $('#who').textContent = `${ME.display_name} — مدیر کل`;
+  buildNav('stats'); loadStats();
+}
+
+/* ===================== navigation ===================== */
+const TABS = [
+  ['stats', '📊 داشبورد'],
+  ['homework', '📚 تکالیف'],
+  ['users', '👥 کاربران'],
+  ['ranking', '🏆 رتبه‌بندی'],
+  ['rules', '⚙️ امتیازدهی'],
+  ['logs', '📜 لاگ رویداد'],
+  ['keys', '🔑 کلیدهای API'],
+];
+function buildNav(active) {
+  $('#nav').innerHTML = TABS.map(([id, label]) =>
+    `<button class="${id === active ? 'active' : ''}" onclick="buildNav('${id}');load${id[0].toUpperCase()+id.slice(1)}()">${label}</button>`
+  ).join('');
+}
+
+/* ===================== tabs ===================== */
+async function loadStats() {
+  const s = await api('/admin/stats');
+  const cards = [
+    [fa(s.users.total), 'کاربران'],
+    [fa(s.users.banned), 'مسدود'],
+    [fa(s.homework.total), 'تکالیف'],
+    [fa(s.homework.today), 'تکلیف امروز'],
+    [fa(s.homework.upcoming), 'تکالیف آینده'],
+  ];
+  const roles = Object.entries(s.users.by_role || {}).map(([r, c]) =>
+    `<span class="tag ${r.toLowerCase()}">${({SUPER_ADMIN:'مدیر کل',CONTRIBUTOR:'همکار',USER:'دانش‌آموز'})[r] || r}: ${fa(c)}</span>`).join(' ');
+  const subjects = (s.top_subjects || []).map(x => `<tr><td>${esc(x.subject)}</td><td>${fa(x.count)}</td></tr>`).join('') || '<tr><td colspan="2" class="muted">—</td></tr>';
+  $('#main').innerHTML = `
+    <div class="card"><h2>📊 آمار کلی</h2>
+      <div class="stat-grid">${cards.map(([n, l]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('')}</div>
+      <div style="margin-top:14px" class="row">${roles}</div>
+    </div>
+    <div class="card"><h2>📘 پرتکرارترین درس‌ها</h2>
+      <table><tr><th>درس</th><th>تعداد</th></tr>${subjects}</table>
+    </div>`;
+}
+
+async function loadHomework() {
+  const scope = loadHomework.scope || 'today';
+  const path = scope === 'today' ? '/homework/today' : scope === 'upcoming' ? '/homework/upcoming' : scope === 'past' ? '/homework/past' : '/homework?order=desc';
+  const data = await api(path);
+  const rows = (data.items || []).map(h => `
+    <tr>
+      <td>${esc(h.subject)}</td><td>${esc(h.title)}</td>
+      <td>${faDate(h.homework_date)}</td><td>${faDate(h.due_date)}</td>
+      <td>${fa((h.attachments || []).length)} 📎</td>
+      <td><button class="btn danger" onclick="delHomework(${h.id})">حذف</button></td>
+    </tr>`).join('') || '<tr><td colspan="6" class="muted">تکلیفی نیست</td></tr>';
+  $('#main').innerHTML = `
+    <div class="card">
+      <h2>📚 مدیریت تکالیف</h2>
+      <div class="row">
+        ${['today','upcoming','past','all'].map(s => `<button class="btn ${s === scope ? '' : 'ghost'}" onclick="loadHomework.scope='${s}';loadHomework()">${({today:'امروز',upcoming:'آینده',past:'گذشته',all:'همه'})[s]}</button>`).join('')}
+      </div>
+      <div style="overflow:auto"><table>
+        <tr><th>درس</th><th>عنوان</th><th>تاریخ</th><th>مهلت</th><th>پیوست</th><th></th></tr>
+        ${rows}
+      </table></div>
+    </div>`;
+}
+loadHomework.scope = 'today';
+
+async function delHomework(id) {
+  if (!confirm('این تکلیف حذف شود؟')) return;
+  await api('/homework/' + id, {method: 'DELETE'});
+  toast('حذف شد'); loadHomework();
+}
+
+async function loadUsers() {
+  const q = loadUsers.q || '';
+  const data = await api('/admin/users?&page_size=50' + (q ? '&q=' + encodeURIComponent(q) : ''));
+  const roleTag = (r) => `<span class="tag ${r.toLowerCase()}">${({SUPER_ADMIN:'مدیر کل',CONTRIBUTOR:'همکار',USER:'دانش‌آموز'})[r]}</span>`;
+  const rows = (data.items || []).map(u => `
+    <tr>
+      <td>${esc(u.display_name)}<div class="muted">@${esc(u.username || '—')} · ${fa(u.telegram_id)}</div></td>
+      <td>${roleTag(u.role)} ${u.is_banned ? '<span class="tag banned">مسدود</span>' : ''}</td>
+      <td>⭐ ${fa(u.points)}</td>
+      <td>
+        ${u.role === 'USER' ? `<button class="btn" onclick="setRole(${u.id},'CONTRIBUTOR')">ارتقا</button>` : ''}
+        ${u.role === 'CONTRIBUTOR' ? `<button class="btn ghost" onclick="setRole(${u.id},'USER')">سلب دسترسی</button>` : ''}
+        ${u.role !== 'SUPER_ADMIN' ? (u.is_banned
+          ? `<button class="btn ok" onclick="unbanUser(${u.id})">رفع مسدودیت</button>`
+          : `<button class="btn danger" onclick="banUser(${u.id})">مسدود</button>`) : ''}
+        <button class="btn ghost" onclick="adjPoints(${u.id})">امتیاز</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="4" class="muted">کاربری یافت نشد</td></tr>';
+  $('#main').innerHTML = `
+    <div class="card"><h2>👥 کاربران (${fa(data.total)})</h2>
+      <div class="row">
+        <input id="uq" placeholder="جستجو: نام / یوزرنیم / آیدی تلگرام" value="${esc(q)}" style="flex:1;min-width:220px">
+        <button class="btn" onclick="loadUsers.q=$('#uq').value;loadUsers()">جستجو</button>
+      </div>
+      <div style="overflow:auto"><table>
+        <tr><th>کاربر</th><th>نقش</th><th>امتیاز</th><th>عملیات</th></tr>${rows}
+      </table></div>
+    </div>`;
+}
+loadUsers.q = '';
+
+async function setRole(id, role) {
+  await api(`/admin/users/${id}/role`, {method: 'PUT', body: JSON.stringify({role})});
+  toast('نقش تغییر کرد'); loadUsers();
+}
+async function banUser(id) {
+  const reason = prompt('دلیل مسدود کردن (اختیاری):') || '';
+  await api(`/admin/users/${id}/ban`, {method: 'POST', body: JSON.stringify({reason})});
+  toast('مسدود شد'); loadUsers();
+}
+async function unbanUser(id) {
+  await api(`/admin/users/${id}/unban`, {method: 'POST'});
+  toast('مسدودیت برداشته شد'); loadUsers();
+}
+async function adjPoints(id) {
+  const amount = prompt('مقدار امتیاز (مثلاً 10 یا -5):');
+  if (amount === null) return;
+  const note = prompt('دلیل (اختیاری):') || '';
+  await api(`/admin/users/${id}/points/adjust`, {method: 'POST', body: JSON.stringify({amount: Number(amount), note})});
+  toast('امتیاز ثبت شد'); loadUsers();
+}
+
+async function loadRanking() {
+  const data = await api('/ranking?limit=50');
+  const medal = (r) => r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : fa(r) + '.';
+  const rows = data.map(e => `
+    <tr><td class="medal">${medal(e.rank)}</td><td>${esc(e.display_name)}</td>
+    <td>⭐ ${fa(e.points)}</td><td>⚡ ${fa(e.activities)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">—</td></tr>';
+  $('#main').innerHTML = `
+    <div class="card"><h2>🏆 رتبه‌بندی کلاس</h2>
+      <table><tr><th>رتبه</th><th>نام</th><th>امتیاز</th><th>فعالیت‌ها</th></tr>${rows}</table>
+    </div>`;
+}
+
+async function loadRules() {
+  const [rules, settings] = await Promise.all([
+    api('/points/rules'), api('/admin/settings').catch(() => []),
+  ]);
+  const rows = Object.entries(rules.actions || {}).map(([k, v]) => `
+    <tr><td><code>${esc(k)}</code></td><td>${fa(v)}</td>
+    <td><button class="btn ghost" onclick="editRule('${k}',${v})">ویرایش</button></td></tr>`).join('');
+  const classSetting = (Array.isArray(settings) ? settings : []).find(s => s.key === 'class_name');
+  $('#main').innerHTML = `
+    <div class="card"><h2>⚙️ قوانین امتیازدهی (${rules.enabled ? 'فعال ✅' : 'غیرفعال ❌'})</h2>
+      <div class="row">
+        <button class="btn ${rules.enabled ? 'danger' : 'ok'}" onclick="toggleRules()">${rules.enabled ? 'غیرفعال کردن' : 'فعال کردن'}</button>
+      </div>
+      <table><tr><th>کلید</th><th>امتیاز</th><th></th></tr>${rows}</table>
+      <div class="row" style="margin-top:12px">
+        <button class="btn ghost" onclick="addRule()">➕ افزودن/ویرایش کلید جدید</button>
+      </div>
+    </div>
+    <div class="card"><h2>🏫 تنظیمات کلاس</h2>
+      <div class="field"><label>نام کلاس (در پیام خوش‌آمد ربات نمایش داده می‌شود)</label>
+        <input id="class-name" value="${esc(classSetting ? classSetting.value : '')}" style="width:100%">
+      </div>
+      <button class="btn" onclick="saveClassName()">ذخیره</button>
+    </div>`;
+}
+async function toggleRules() {
+  const rules = await api('/points/rules');
+  await api('/points/rules', {method: 'PUT', body: JSON.stringify({enabled: !rules.enabled, actions: rules.actions})});
+  toast('ذخیره شد'); loadRules();
+}
+async function editRule(key, current) {
+  const val = prompt(`مقدار جدید برای «${key}»:`, current);
+  if (val === null) return;
+  const rules = await api('/points/rules');
+  rules.actions[key] = Number(val);
+  await api('/points/rules', {method: 'PUT', body: JSON.stringify(rules)});
+  toast('ذخیره شد'); loadRules();
+}
+async function addRule() {
+  const key = prompt('کلید (حروف کوچک انگلیسی، مثل share_note):');
+  if (!key) return;
+  const val = prompt('مقدار امتیاز:', '1');
+  const rules = await api('/points/rules');
+  rules.actions[key] = Number(val);
+  await api('/points/rules', {method: 'PUT', body: JSON.stringify(rules)});
+  toast('ذخیره شد'); loadRules();
+}
+async function saveClassName() {
+  await api('/admin/settings/class_name', {method: 'PUT', body: JSON.stringify({value: $('#class-name').value})});
+  toast('ذخیره شد');
+}
+
+async function loadLogs() {
+  const action = loadLogs.action || '';
+  const data = await api('/admin/audit-logs?page_size=50' + (action ? '&action=' + encodeURIComponent(action) : ''));
+  const rows = (data.items || []).map(l => `
+    <tr><td><code>${esc(l.action)}</code></td><td>${esc(l.actor_name)}</td>
+    <td>${esc(l.entity_type)}${l.entity_id ? ' #' + esc(l.entity_id) : ''}</td>
+    <td>${esc(l.source)}</td><td class="muted">${l.created_at ? l.created_at.replace('T', ' ').slice(0, 16) : ''}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="muted">رویدادی نیست</td></tr>';
+  $('#main').innerHTML = `
+    <div class="card"><h2>📜 لاگ رویدادها (${fa(data.total)})</h2>
+      <div class="row">
+        <input id="la" placeholder="فیلتر اکشن (مثلاً homework.)" value="${esc(action)}" style="flex:1">
+        <button class="btn" onclick="loadLogs.action=$('#la').value;loadLogs()">اعمال</button>
+      </div>
+      <div style="overflow:auto"><table>
+        <tr><th>اکشن</th><th>عامل</th><th>موجودیت</th><th>منبع</th><th>زمان</th></tr>${rows}
+      </table></div>
+    </div>`;
+}
+loadLogs.action = '';
+
+async function loadKeys() {
+  const keys = await api('/admin/api-keys');
+  const rows = keys.map(k => `
+    <tr><td>${esc(k.name)}</td><td><code>${esc(k.key_prefix)}…</code></td>
+    <td class="muted">${k.last_used_at ? faDate(k.last_used_at) : 'استفاده نشده'}</td>
+    <td><button class="btn danger" onclick="revokeKey(${k.id})">ابطال</button></td></tr>`).join('')
+    || '<tr><td colspan="4" class="muted">کلیدی وجود ندارد</td></tr>';
+  $('#main').innerHTML = `
+    <div class="card"><h2>🔑 کلیدهای API</h2>
+      <p class="muted" style="margin-bottom:12px">برای اتصال کلاینت‌های سروری (مثل پنل آینده) در هدر <code>X-API-Key</code> استفاده می‌شود.</p>
+      <div class="row"><button class="btn" onclick="createKey()">➕ کلید جدید</button></div>
+      <table><tr><th>نام</th><th>پیشوند</th><th>آخرین استفاده</th><th></th></tr>${rows}</table>
+    </div>`;
+}
+async function createKey() {
+  const name = prompt('نام کلید (مثلاً admin-panel):');
+  if (!name) return;
+  const k = await api('/admin/api-keys', {method: 'POST', body: JSON.stringify({name})});
+  await loadKeys();
+  toast('کلید ساخته شد — در ادامه کپی کنید');
+  $('#main').insertAdjacentHTML('afterbegin', `
+    <div class="card" style="border-color:var(--warn)">
+      <h2>🔑 کلید جدید (فقط همین یک بار نمایش داده می‌شود)</h2>
+      <pre>${esc(k.key)}</pre>
+    </div>`);
+}
+async function revokeKey(id) {
+  if (!confirm('این کلید باطل شود؟')) return;
+  await api('/admin/api-keys/' + id, {method: 'DELETE'});
+  toast('ابطال شد'); loadKeys();
+}
+
+/* ===================== boot ===================== */
+$('#code').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+if (TOKEN) { showApp().catch(() => logout()); }
+</script>
+</body>
+</html>
